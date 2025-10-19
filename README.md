@@ -54,4 +54,50 @@ A solução permite:
 1. **Abrir o projeto no Pentaho Data Integration (Spoon):**
    - Executar o *Job* principal: `Job_Marine_ETL.kjb`
    - Verificar as transformações:
-     - `
+     - `TR_Carregar_Praias.ktr`
+     - `Trans_01_Extract_Marine_API.ktr`
+     - `Trans_02_Clean_Transform_Final.ktr`
+
+2. **Configurar a ligação à Base de Dados PostgreSQL:**
+   - Base: `marine_esposende_dw`
+   - Host: `localhost`
+   - Porta: `5432`
+   - Utilizador: `postgres`
+   - Password: `admin`
+
+3. **Verificar o carregamento dos dados:**
+   - Tabelas principais:
+     - `marine.fact_beachs`
+     - `marine.fact_marine_data`
+     - `log.log_table`
+
+4. **Visualizar a Dashboard em Node-RED:**
+   - Importar o ficheiro `flows.json` (fornecido)
+   - Aceder a: `http://localhost:1880/ui`
+   - Interagir com os gráficos de altura das ondas, temperatura, correntes e alertas.
+
+---
+
+## 🎥 Vídeo de Demonstração
+
+O vídeo apresenta o funcionamento integral do processo ETL e da *Dashboard* desenvolvida.
+
+🔗 **Link direto:** [https://youtu.be/Ayt6tMrhYLE](https://youtu.be/Ayt6tMrhYLE)
+
+📱 **QR Code incluído no relatório (secção 6).**
+
+---
+
+## 📚 Referências Técnicas (APA)
+
+- Hitachi Vantara. (2024). *Pentaho Data Integration (Kettle) User Guide*. [Documentação oficial].  
+- Open-Meteo. (2025). *Marine Weather API Documentation*.  
+- PostgreSQL Global Development Group. (2025). *PostgreSQL 16.3 Documentation*.  
+- Node-RED Foundation. (2025). *Node-RED Dashboard User Guide*.  
+- Instituto Politécnico do Cávado e do Ave. (2025). *Enunciado TP01 — Integração de Sistemas de Informação*.
+
+---
+
+📦 **Compactação Final:**
+
+Deves submeter o ficheiro compactado:
