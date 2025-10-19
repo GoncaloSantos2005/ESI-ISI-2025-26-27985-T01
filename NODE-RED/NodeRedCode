@@ -1,0 +1,587 @@
+[
+    {
+        "id": "281c06f5999bde94",
+        "type": "tab",
+        "label": "Marine Dashboard",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "3dc6bb023928bed7",
+        "type": "inject",
+        "z": "281c06f5999bde94",
+        "name": "Timer - 5 min",
+        "props": [],
+        "repeat": "300",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 120,
+        "y": 100,
+        "wires": [
+            [
+                "4bd2dab65cb52f06"
+            ]
+        ]
+    },
+    {
+        "id": "4bd2dab65cb52f06",
+        "type": "postgresql",
+        "z": "281c06f5999bde94",
+        "name": "Query Dados Atuais",
+        "query": "SELECT timestamp_utc, extraction_id, wave_height, wave_direction, wave_period, wave_condition, sea_surface_temperature, water_temp_class, ocean_current_kmh, current_intensity, wave_energy_kj_m2, sea_level_anomaly_m, data_quality_score, data_completeness_pct, is_anomaly, is_validated, location_name, latitude, longitude FROM marine.fact_marine_data ORDER BY timestamp_utc DESC LIMIT 1",
+        "postgreSQLConfig": "pg_config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 320,
+        "y": 100,
+        "wires": [
+            [
+                "822bfeb3ba55df46"
+            ]
+        ]
+    },
+    {
+        "id": "822bfeb3ba55df46",
+        "type": "function",
+        "z": "281c06f5999bde94",
+        "name": "Processar Dados",
+        "func": "const data = msg.payload[0];\n\nif (!data) {\n    node.warn('Sem dados disponíveis');\n    return null;\n}\n\n// Output 1: Gauge Altura\nconst msg1 = {\n    payload: parseFloat(data.wave_height) || 0,\n    topic: \"Altura das Ondas\"\n};\n\n// Output 2: Gauge Temperatura\nconst msg2 = {\n    payload: parseFloat(data.sea_surface_temperature) || 0,\n    topic: \"Temperatura\"\n};\n\n// Output 3: Text Condição\nconst msg3 = {\n    payload: data.wave_condition || \"Desconhecido\",\n    topic: \"Condição\"\n};\n\n// Output 4: Gauge Corrente\nconst msg4 = {\n    payload: parseFloat(data.ocean_current_kmh) || 0,\n    topic: \"Corrente\"\n};\n\n// Output 5: LED Anomalia\nconst msg5 = {\n    payload: data.is_anomaly ? true : false,\n    topic: \"Anomalia\"\n};\n\n// Output 6: Gauge Energia\nconst msg6 = {\n    payload: parseFloat(data.wave_energy_kj_m2) || 0,\n    topic: \"Energia\"\n};\n\n// Output 7: Text Qualidade\nconst msg7 = {\n    payload: `${data.data_quality_score}/100`,\n    topic: \"Qualidade\"\n};\n\n// Output 8: Tabela Completa\nconst msg8 = {\n    payload: [{\n        \"Timestamp\": new Date(data.timestamp_utc).toLocaleString('pt-PT'),\n        \"Altura (m)\": data.wave_height,\n        \"Condição\": data.wave_condition,\n        \"Temp (°C)\": data.sea_surface_temperature,\n        \"Classe Temp\": data.water_temp_class,\n        \"Corrente (km/h)\": data.ocean_current_kmh,\n        \"Energia (kJ/m²)\": data.wave_energy_kj_m2,\n        \"Qualidade\": data.data_quality_score,\n        \"Anomalia\": data.is_anomaly ? \"Sim\" : \"Não\"\n    }]\n};\n\n// Output 9: Notificação\nconst msg9 = data.is_anomaly ? {\n    payload: `⚠️ ANOMALIA DETECTADA!\\nAltura: ${data.wave_height}m\\nTemp: ${data.sea_surface_temperature}°C\\nQualidade: ${data.data_quality_score}/100`,\n    topic: \"Alerta Marine\"\n} : null;\n\nreturn [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9];",
+        "outputs": 9,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 100,
+        "wires": [
+            [
+                "5c4f9e983e4272e6"
+            ],
+            [
+                "b0eb76d693a67c33"
+            ],
+            [
+                "a518299ccdd8e976"
+            ],
+            [
+                "a995c793f53c268b"
+            ],
+            [],
+            [
+                "865334a1f23820a7"
+            ],
+            [
+                "1a26a32e5143357e"
+            ],
+            [
+                "8dfca795460ca914"
+            ],
+            [
+                "2e02f615a70d4f3d"
+            ]
+        ]
+    },
+    {
+        "id": "5c4f9e983e4272e6",
+        "type": "ui_gauge",
+        "z": "281c06f5999bde94",
+        "name": "Altura das Ondas",
+        "group": "g_waves",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Altura das Ondas",
+        "label": "metros",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 10,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": 2,
+        "seg2": 5,
+        "x": 760,
+        "y": 20,
+        "wires": []
+    },
+    {
+        "id": "b0eb76d693a67c33",
+        "type": "ui_gauge",
+        "z": "281c06f5999bde94",
+        "name": "Temperatura",
+        "group": "g_temp",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Temperatura da Água",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 35,
+        "colors": [
+            "#0080ff",
+            "#00b500",
+            "#ca3838"
+        ],
+        "seg1": 15,
+        "seg2": 25,
+        "x": 760,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "a518299ccdd8e976",
+        "type": "ui_text",
+        "z": "281c06f5999bde94",
+        "group": "g_waves",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "Condição",
+        "label": "Condição Atual",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 740,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "a995c793f53c268b",
+        "type": "ui_gauge",
+        "z": "281c06f5999bde94",
+        "name": "Corrente",
+        "group": "g_overview",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Corrente Oceânica",
+        "label": "km/h",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 5,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": 2,
+        "seg2": 3,
+        "x": 740,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "865334a1f23820a7",
+        "type": "ui_gauge",
+        "z": "281c06f5999bde94",
+        "name": "Energia das Ondas",
+        "group": "g_waves",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Energia das Ondas",
+        "label": "kJ/m²",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 100,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": 30,
+        "seg2": 60,
+        "x": 770,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "1a26a32e5143357e",
+        "type": "ui_text",
+        "z": "281c06f5999bde94",
+        "group": "g_overview",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "name": "Score Qualidade",
+        "label": "Qualidade dos Dados",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 770,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "8dfca795460ca914",
+        "type": "ui_table",
+        "z": "281c06f5999bde94",
+        "group": "g_overview",
+        "name": "Tabela Dados",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "columns": [],
+        "outputs": 0,
+        "cts": false,
+        "x": 750,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "2e02f615a70d4f3d",
+        "type": "ui_toast",
+        "z": "281c06f5999bde94",
+        "position": "top right",
+        "displayTime": "5",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": false,
+        "topic": "",
+        "name": "Notificação",
+        "x": 750,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "f281a74b2c731286",
+        "type": "inject",
+        "z": "281c06f5999bde94",
+        "name": "Carregar Histórico 24h",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 400,
+        "wires": [
+            [
+                "8c693ad61aaebce1"
+            ]
+        ]
+    },
+    {
+        "id": "8c693ad61aaebce1",
+        "type": "postgresql",
+        "z": "281c06f5999bde94",
+        "name": "Query Histórico",
+        "query": "SELECT timestamp_utc, wave_height, sea_surface_temperature, ocean_current_kmh, wave_energy_kj_m2 FROM marine.fact_marine_data WHERE timestamp_utc > NOW() - INTERVAL '24 hours' ORDER BY timestamp_utc",
+        "postgreSQLConfig": "pg_config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 350,
+        "y": 400,
+        "wires": [
+            [
+                "377f4cb5c134b1fb"
+            ]
+        ]
+    },
+    {
+        "id": "377f4cb5c134b1fb",
+        "type": "function",
+        "z": "281c06f5999bde94",
+        "name": "Formatar Gráfico",
+        "func": "const data = msg.payload;\n\nif (!data || data.length === 0) {\n    node.warn('Sem dados históricos');\n    return null;\n}\n\n// Preparar arrays para o gráfico\nconst labels = [];\nconst waveData = [];\nconst tempData = [];\nconst currentData = [];\nconst energyData = [];\n\ndata.forEach(row => {\n    const timestamp = new Date(row.timestamp_utc);\n    labels.push(timestamp.toLocaleTimeString('pt-PT', {hour: '2-digit', minute: '2-digit'}));\n    waveData.push(parseFloat(row.wave_height) || 0);\n    tempData.push(parseFloat(row.sea_surface_temperature) || 0);\n    currentData.push(parseFloat(row.ocean_current_kmh) || 0);\n    energyData.push(parseFloat(row.wave_energy_kj_m2) || 0);\n});\n\n// Output 1: Gráfico Ondas\nmsg.payload = [{\n    series: ['Altura (m)'],\n    data: [waveData],\n    labels: labels\n}];\nconst msg1 = msg;\n\n// Output 2: Gráfico Temperatura\nconst msg2 = {\n    payload: [{\n        series: ['Temperatura (°C)'],\n        data: [tempData],\n        labels: labels\n    }]\n};\n\n// Output 3: Gráfico Múltiplo\nconst msg3 = {\n    payload: [{\n        series: ['Ondas (m)', 'Temp (°C)', 'Corrente (km/h)'],\n        data: [waveData, tempData, currentData],\n        labels: labels\n    }]\n};\n\nreturn [msg1, msg2, msg3];",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 400,
+        "wires": [
+            [
+                "10029ef54f9ba503"
+            ],
+            [
+                "77efd1678c967f97"
+            ],
+            [
+                "4e5807354195367f"
+            ]
+        ]
+    },
+    {
+        "id": "10029ef54f9ba503",
+        "type": "ui_chart",
+        "z": "281c06f5999bde94",
+        "name": "Gráfico Ondas",
+        "group": "g_waves",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "label": "Histórico Altura das Ondas (24h)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm",
+        "interpolate": "linear",
+        "nodata": "Sem dados",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "86400",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c"
+        ],
+        "outputs": 1,
+        "x": 760,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "77efd1678c967f97",
+        "type": "ui_chart",
+        "z": "281c06f5999bde94",
+        "name": "Gráfico Temperatura",
+        "group": "g_temp",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "Histórico Temperatura (24h)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm",
+        "interpolate": "linear",
+        "nodata": "Sem dados",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "86400",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff7f0e",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c"
+        ],
+        "outputs": 1,
+        "x": 780,
+        "y": 420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4e5807354195367f",
+        "type": "ui_chart",
+        "z": "281c06f5999bde94",
+        "name": "Gráfico Geral",
+        "group": "g_overview",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "Visão Geral 24h",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm",
+        "interpolate": "linear",
+        "nodata": "Sem dados",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "86400",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#ff7f0e",
+            "#2ca02c",
+            "#d62728"
+        ],
+        "outputs": 1,
+        "x": 750,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d99c9b0707f63166",
+        "type": "inject",
+        "z": "281c06f5999bde94",
+        "name": "Carregar Anomalias",
+        "props": [],
+        "repeat": "600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 540,
+        "wires": [
+            [
+                "f943380314f1f846"
+            ]
+        ]
+    },
+    {
+        "id": "f943380314f1f846",
+        "type": "postgresql",
+        "z": "281c06f5999bde94",
+        "name": "Query Anomalias",
+        "query": "SELECT timestamp_utc, wave_height, sea_surface_temperature, ocean_current_kmh, wave_condition, data_quality_score FROM marine.fact_marine_data WHERE is_anomaly = true AND timestamp_utc > NOW() - INTERVAL '7 days' ORDER BY timestamp_utc DESC LIMIT 10",
+        "postgreSQLConfig": "pg_config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 350,
+        "y": 540,
+        "wires": [
+            [
+                "a30ea118b11fc5ed"
+            ]
+        ]
+    },
+    {
+        "id": "a30ea118b11fc5ed",
+        "type": "function",
+        "z": "281c06f5999bde94",
+        "name": "Formatar Anomalias",
+        "func": "const data = msg.payload;\n\nif (!data || data.length === 0) {\n    msg.payload = [{\n        \"Mensagem\": \"Nenhuma anomalia detectada nos últimos 7 dias\"\n    }];\n    return msg;\n}\n\nconst formatted = data.map(row => {\n    return {\n        \"Data/Hora\": new Date(row.timestamp_utc).toLocaleString('pt-PT'),\n        \"Altura (m)\": row.wave_height,\n        \"Temp (°C)\": row.sea_surface_temperature,\n        \"Corrente (km/h)\": row.ocean_current_kmh,\n        \"Condição\": row.wave_condition,\n        \"Qualidade\": row.data_quality_score\n    };\n});\n\nmsg.payload = formatted;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 540,
+        "wires": [
+            [
+                "3a492ebba91ecf4b"
+            ]
+        ]
+    },
+    {
+        "id": "3a492ebba91ecf4b",
+        "type": "ui_table",
+        "z": "281c06f5999bde94",
+        "group": "g_alerts",
+        "name": "Tabela Anomalias",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "columns": [],
+        "outputs": 0,
+        "cts": false,
+        "x": 760,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "pg_config",
+        "type": "postgreSQLConfig",
+        "name": "Marine DB",
+        "host": "localhost",
+        "hostFieldType": "str",
+        "port": "5432",
+        "portFieldType": "num",
+        "database": "marine_esposende_dw",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": "10",
+        "maxFieldType": "num",
+        "idle": "1000",
+        "idleFieldType": "num",
+        "connectionTimeout": "10000",
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "admin",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "g_waves",
+        "type": "ui_group",
+        "name": "Condições das Ondas",
+        "tab": "tab_marine",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "g_temp",
+        "type": "ui_group",
+        "name": "Temperatura da Água",
+        "tab": "tab_marine",
+        "order": 3,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "g_overview",
+        "type": "ui_group",
+        "name": "Visão Geral",
+        "tab": "tab_marine",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "g_alerts",
+        "type": "ui_group",
+        "name": "Alertas e Anomalias",
+        "tab": "tab_marine",
+        "order": 4,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "tab_marine",
+        "type": "ui_tab",
+        "name": "Marine Dashboard",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "01baa7a42eeb642d",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-postgresql": "0.15.4",
+            "node-red-dashboard": "3.6.6",
+            "node-red-node-ui-table": "0.4.5"
+        }
+    }
+]
