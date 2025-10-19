@@ -6,7 +6,7 @@
 **Número:** 27985  
 **Unidade Curricular:** Integração de Sistemas de Informação (ISI)  
 **Instituição:** Instituto Politécnico do Cávado e do Ave (IPCA)  
-**Docente:** Prof. Doutor [Nome do Professor]  
+**Docente:** Prof. Doutor Óscar Ribeiro.  
 **Ano Letivo:** 2024/2025  
 
 ---
