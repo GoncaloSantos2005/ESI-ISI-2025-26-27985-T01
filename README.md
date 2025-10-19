@@ -84,7 +84,7 @@ O vídeo apresenta o funcionamento integral do processo ETL e da *Dashboard* des
 
 🔗 **Link direto:** [https://youtu.be/Ayt6tMrhYLE](https://youtu.be/Ayt6tMrhYLE)
 
-📱 **QR Code incluído no relatório (secção 6).**
+📱 **QR Code incluído no relatório (secção 8).**
 
 ---
 
