@@ -95,9 +95,3 @@ O vídeo apresenta o funcionamento integral do processo ETL e da *Dashboard* des
 - PostgreSQL Global Development Group. (2025). *PostgreSQL 16.3 Documentation*.  
 - Node-RED Foundation. (2025). *Node-RED Dashboard User Guide*.  
 - Instituto Politécnico do Cávado e do Ave. (2025). *Enunciado TP01 — Integração de Sistemas de Informação*.
-
----
-
-📦 **Compactação Final:**
-
-Deves submeter o ficheiro compactado:
